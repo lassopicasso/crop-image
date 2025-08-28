@@ -12,6 +12,7 @@ export const Cropper: React.FC = () => {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Cumulus_Clouds_over_Yellow_Prairie2.jpg/1280px-Cumulus_Clouds_over_Yellow_Prairie2.jpg";
   const [image] = useState(() => {
     const img = new Image();
+    img.crossOrigin = "anonymous";
     img.src = imageLink;
     return img;
   });
@@ -117,6 +118,49 @@ export const Cropper: React.FC = () => {
     });
   };
 
+  const handleSave = () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    canvas.width = cropCircle.radius * 2;
+    canvas.height = cropCircle.radius * 2;
+
+    ctx.beginPath();
+    ctx.arc(
+      cropCircle.radius,
+      cropCircle.radius,
+      cropCircle.radius,
+      0,
+      Math.PI * 2
+    );
+    ctx.closePath();
+    ctx.clip();
+
+    // Compute the source rectangle from the original image
+    const sx = (cropCircle.x - cropCircle.radius - position.x) / scale;
+    const sy = (cropCircle.y - cropCircle.radius - position.y) / scale;
+    const sWidth = (cropCircle.radius * 2) / scale;
+    const sHeight = (cropCircle.radius * 2) / scale;
+
+    ctx.drawImage(
+      image,
+      sx,
+      sy,
+      sWidth,
+      sHeight,
+      0,
+      0,
+      cropCircle.radius * 2,
+      cropCircle.radius * 2
+    );
+
+    const link = document.createElement("a");
+    link.download = "cropped.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
+
   return (
     <>
       <canvas
@@ -140,6 +184,8 @@ export const Cropper: React.FC = () => {
         value={scale}
         onChange={(e) => handleSlider(e)}
       />
+
+      <button onClick={handleSave}>Save Cropped Image</button>
     </>
   );
 };
